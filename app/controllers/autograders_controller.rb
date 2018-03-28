@@ -24,14 +24,22 @@ class AutogradersController < ApplicationController
 
   action_auth_level :update, :instructor
   def update
-    flash[:info] = "Saved!" if @autograder.update(autograder_params)
-		upload
+    if @autograder.update(autograder_params)
+      flash[:info] = "Saved!"
+    else
+      flash[:error] = "Invalid change in settings!"
+    end
+    upload
     redirect_to([:edit, @course, @assessment, :autograder]) && return
   end
 	
   action_auth_level :destroy, :instructor
   def destroy
-    flash[:info] = "Destroyed!" if @autograder.destroy
+    if @autograder.destroy
+      flash[:info] = "Destroyed!"
+    else
+      flash[:error] = "Failed to Destroy!"
+    end
     redirect_to([:edit, @course, @assessment]) && return
   end
 

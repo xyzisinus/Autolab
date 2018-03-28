@@ -134,13 +134,21 @@ class ScoreboardsController < ApplicationController
 
   action_auth_level :update, :instructor
   def update
-    flash[:info] = "Saved!" if @scoreboard.update(scoreboard_params)
+    if @scoreboard.update(scoreboard_params)
+      flash[:info] = "Saved!"
+    else
+      flash[:error] = "Ill formed column spec!"
+    end
     redirect_to(action: :edit) && return
   end
 
   action_auth_level :destroy, :instructor
   def destroy
-    flash[:info] = "Destroyed!" if @scoreboard.destroy
+    if @scoreboard.destroy
+      flash[:info] = "Destroyed!"
+    else
+      flash[:error] = "Failed to Destroy!"
+    end
     redirect_to([:edit, @course, @assessment]) && return
   end
 
