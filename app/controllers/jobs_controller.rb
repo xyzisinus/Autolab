@@ -184,15 +184,32 @@ class JobsController < ApplicationController
       end
     end
     # Run through job list and extract useful data
-    @tango_live_jobs = TangoClient.jobs
-    @tango_dead_jobs = TangoClient.jobs(deadjobs = 1)
-    @plot_data = tango_plot_data(live_jobs = @tango_live_jobs, dead_jobs = @tango_dead_jobs)
+    raw_live_jobs = TangoClient.jobs
+    raw_dead_jobs = TangoClient.jobs(deadjobs = 1)
+    @plot_data = tango_plot_data(live_jobs = raw_live_jobs, dead_jobs = raw_dead_jobs)
     # Get a list of current and upcoming assessments
     @upcoming_asmt = []
     Assessment.find_each do |asmt|
       @upcoming_asmt << asmt if asmt.has_autograder? && asmt.due_at > Time.now
     end
     @upcoming_asmt.sort! { |a, b| a.due_at <=> b.due_at }
+
+    # Instance variables that will be used by the view
+    @running_jobs = []   # running jobs
+    @waiting_jobs = []   # jobs waiting in job queue
+
+    # Build formatted lists of the running and waiting jobs
+    return unless raw_live_jobs
+
+    raw_live_jobs.each do |rjob|
+      if rjob["assigned"] == true
+        @running_jobs << formatRawJob(rjob, true)
+        @running_jobs.sort! { |a, b| b[:tfirst] <=> a[:tfirst] }
+      else
+        @waiting_jobs << formatRawJob(rjob, true)
+        @waiting_jobs.sort! { |a, b| b[:tfirst] <=> a[:tfirst] }
+      end
+    end
   end
 
   action_auth_level :tango_data, :instructor
@@ -255,11 +272,13 @@ protected
       job[:status] = rjob["trace"][-1].split("|")[1]
     end
 
+    job[:vmPool] = rjob["vm"]["name"]
     if is_live
       if job[:status]["Added job"]
         job[:state] = "Waiting"
       else
         job[:state] = "Running"
+        job[:vmName] = rjob["vm"]["id"]
       end
     else
       job[:state] = "Completed"

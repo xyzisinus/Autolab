@@ -17,53 +17,51 @@
 
 <h2>Tango Status</h2>
 <h3>Currently Running Jobs</h3>
-<table class="navigatable prettyBorder sortable">
-  <thead>
+
+<% if @running_jobs.length > 0 then %>
+  <p><%= @running_jobs.length %> jobs (most recent submission first)</p>
+<% end %>
+  <table class='prettyBorder sortable'>
     <tr>
       <th>Job ID</th>
       <th>Job Name</th>
-      <th>VM Name</th>
+      <th>VM Pool:Name</th>
       <th>Submitted At</th>
       <th>Elapsed (s)</th>
     </tr>
-  </thead>
-  <tbody>
-    <% @tango_live_jobs.sort { |a, b| b["id"] <=>  a["id"] }.each do |j| %>
-    <%   next unless j["assigned"] %>
+  <% for @job in @running_jobs do %>
     <tr>
-      <td><%= j["id"] %></td>
-      <td><%= j["name"] %></td>
-      <td><%= j["vm"]["name"] %>:<%= j["vm"]["id"] %></td>
-      <td><%= j["trace"].first.split("|")[0] %></td>
-      <td><%= Time.now.to_i - ActiveSupport::TimeZone["UTC"].parse(j["trace"].first.split("|")[0]).to_i %></td>
+    <td> <%= @job[:id] %> </td>
+    <td> <%= @job[:name] %> </td>
+    <td> <%= @job[:vmPool] %>:<%= @job[:vmName] %></td>
+    <td> <%= @job[:submissionTime] %> </td>
+    <td> <%= @job[:elapsed] %> </td>
     </tr>
-    <% end %>
-  </tbody>
+  <% end %>
 </table>
 
 <h3>Jobs Waiting to Run</h3>
-<table class="navigatable prettyBorder sortable">
-  <thead>
+
+<% if @waiting_jobs.length > 0 then %>
+  <p><%= @waiting_jobs.length %> jobs (most recent submission first)</p>
+<% end %>
+  <table class='prettyBorder sortable'>
     <tr>
       <th>Job ID</th>
       <th>Job Name</th>
-      <th>VM Name</th>
+      <th>VM Pool</th>
       <th>Submitted At</th>
       <th>Elapsed (s)</th>
     </tr>
-  </thead>
-  <tbody>
-    <% @tango_live_jobs.sort { |a, b| b["id"] <=>  a["id"] }.each do |j| %>
-    <%   next if j["assigned"] %>
+  <% for @job in @waiting_jobs do %>
     <tr>
-      <td><%= j["id"] %></td>
-      <td><%= j["name"] %></td>
-      <td><%= j["vm"]["name"] %>:<%= j["vm"]["id"] %></td>
-      <td><%= j["trace"].first.split("|")[0] %></td>
-      <td><%= Time.parse(j["trace"].last.split("|")[0]).to_i - Time.parse(j["trace"].first.split("|")[0]).to_i %></td>
+    <td> <%= @job[:id] %> </td> 
+    <td> <%= @job[:name] %> </td>
+    <td> <%= @job[:vmPool] %></td>
+    <td> <%= @job[:submissionTime] %> </td>
+    <td> <%= @job[:elapsed] %> </td>
     </tr>
-    <% end %>
-  </tbody>
+  <% end %>
 </table>
 
 <h3>Global Statistics</h3>
