@@ -7,19 +7,19 @@ This page shows you the status of current and recent autograding jobs.<br />
 <%= link_to "Click here", tango_status_course_jobs_path %> to view the overall status of Tango VMs.
 </p>
 
-<h2>Currently Running Jobs</h2>
+<h3>Currently Running Jobs</h3>
 
-<% if @running_jobs.blank? or @running_jobs == [] then %>
-  None
-<% else %>
+<% if @running_jobs.length > 0 then %>
+  <p><%= @running_jobs.length %> jobs (most recent submission first)</p>
+<% end %>
   <table class='prettyBorder sortable'>
   <tr><th>Job ID</th><th>Job Name</th><th>Submitted At</th>
   <th>Elapsed (s)</th><th>Status</th></tr>
-  <% for @job in @running_jobs.sort { |a, b| b[:id] <=>  a[:id] } do %>
+  <% for @job in @running_jobs do %>
     <tr>
     <td> <%= @job[:id] %> </td> 
-    <td> <%= @job[:name] %> </td> 
-    <td> <span class="moment-date-time"><%= DateTime.parse(@job[:first]).to_time.in_time_zone.to_s %></span> </td> 
+    <td> <%= @job[:name] %> </td>
+    <td> <%= @job[:submissionTime] %> </td>
     <td> <%= @job[:elapsed] %> </td>
 
     <% if @job[:name] == "*" then %>
@@ -34,20 +34,19 @@ This page shows you the status of current and recent autograding jobs.<br />
     </tr>
   <% end %>
   </table>
+
+<h3>Jobs Waiting to Run</h3>
+
+<% if @waiting_jobs.length > 0 then %>
+  <p><%= @waiting_jobs.length %> jobs (most recent submission first)</p>
 <% end %>
-
-<h2>Jobs Waiting to Run</h2>
-
-<% if @waiting_jobs.blank? or @waiting_jobs == [] then %>
-  None
-<% else %>
   <table class='prettyBorder sortable'>
   <tr><th>Job ID</th><th>Job Name</th><th>Submitted At</th><th>Elapsed (s)</th><th>Status</th></tr>
-  <% for @job in @waiting_jobs.sort { |a, b| b[:id] <=>  a[:id] } do %>
+  <% for @job in @waiting_jobs do %>
     <tr>
     <td> <%= @job[:id] %> </td> 
-    <td> <%= @job[:name] %> </td> 
-    <td> <span class="moment-date-time"><%= DateTime.parse(@job[:first]).to_time.in_time_zone.to_s %></span> </td> 
+    <td> <%= @job[:name] %> </td>
+    <td> <%= @job[:submissionTime] %> </td>
     <td> <%= @job[:elapsed] %> </td>
 
     <% if @job[:name] == "*" then %>
@@ -62,43 +61,33 @@ This page shows you the status of current and recent autograding jobs.<br />
     </tr>
   <% end %>
   </table>
-<% end %>
-
-
-<% 
-since = ""
-if @dead_jobs_view and 
-  @dead_jobs_view[-1] and 
-  @dead_jobs_view[-1][:first] and 
-  @dead_jobs_view[-1][:first] != "" then
-    since = DateTime.parse(@dead_jobs_view[-1][:first]).to_time.in_time_zone.to_s
-end
-%>
 
 <% if @cud.user.administrator? then %>
-  <h2>Recently Completed Jobs (since <span class="moment-date-time"><%=since%></span>)</h2>
+  <h3>Recently Completed Jobs <%= @dead_job_since %></h3>
 <% elsif @cud.instructor? then %>
-  <h2>Recently Completed Jobs For This Course (since <span class="moment-date-time"><%=since%></span>)</h2>
+  <h3>Recently Completed Jobs For This Course <%= @dead_job_since %></h3>
 <% else %>
-  <h2>Your Recently Completed Jobs (since <span class="moment-date-time"><%=since%></span>)</h2>
+  <h3>Your Recently Completed Jobs <%= @dead_job_since %></h3>
 <% end %>
 
-<% if @dead_jobs_view.blank? or @dead_jobs == [] then %>
-  None
-<% else %>
+<% if @dead_jobs_view.length > 0 then %>
+  <p><%= @dead_jobs_view.length %> jobs (most recent completion first)</p>
+<% end %>
   <table class='prettyBorder sortable'>
   <tr><th>Job ID</th><th>Job Name</th><th>Submitted At</th>
-  <th>Elapsed (s)</th><th>Status</th></tr>
-  <% for @job in @dead_jobs_view.sort { |a, b| b[:id] <=>  a[:id] } do %>
+  <th>Completed At</th><th>Elapsed (s)</th><th>Status</th></tr>
+  <% for @job in @dead_jobs_view do %>
     <tr <% if @job[:state] == "Failed" then %> style="background-color:#ce4844; color:#fff"<% end %>>    <td> <%= @job[:id] %> </td>
     <td> <%= @job[:name] %> </td> 
-    <td> <span class="moment-date-time"><%= DateTime.parse(@job[:first]).to_time.in_time_zone.to_s %></span> </td> 
+    <td> <%= @job[:submissionTime] %> </td>
+    <td> <%= @job[:completionTime] %> </td>
     <td> <%= @job[:elapsed] %> </td>
     <td> <%= link_to @job[:state], {:controller => "jobs", :action => "getjob", :id=>@job[:id]} %> </td>
     </tr>
   <% end %>
   </table>
 
+<% if @dead_jobs_view.length > 0 then %>
   <p>
   <% if @dead_jobs_view.size <= AUTOCONFIG_DEF_DEAD_JOBS then %>
     <%= link_to "View long list of recently completed jobs", 

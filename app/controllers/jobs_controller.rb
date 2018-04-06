@@ -20,6 +20,7 @@ class JobsController < ApplicationController
     @waiting_jobs = []   # jobs waiting in job queue
     @dead_jobs = []      # dead jobs culled from dead job queue
     @dead_jobs_view = [] # subset of dead jobs to view
+    @dead_jobs_since = "" # the first submitted dead job in view
 
     # Get the number of dead jobs the user wants to view
     dead_count = AUTOCONFIG_DEF_DEAD_JOBS
@@ -41,10 +42,10 @@ class JobsController < ApplicationController
     raw_live_jobs.each do |rjob|
       if rjob["assigned"] == true
         @running_jobs << formatRawJob(rjob, true)
-        @running_jobs.sort! { |a, b| [b[:tlast], b[:id]] <=> [a[:tlast], a[:id]] }
+        @running_jobs.sort! { |a, b| b[:tfirst] <=> a[:tfirst] }
       else
         @waiting_jobs << formatRawJob(rjob, true)
-        @waiting_jobs.sort! { |a, b| [b[:tlast], b[:id]] <=> [a[:tlast], a[:id]] }
+        @waiting_jobs.sort! { |a, b| b[:tfirst] <=> a[:tfirst] }
       end
     end
 
@@ -59,8 +60,14 @@ class JobsController < ApplicationController
     end
 
     # Sort the list of dead jobs and then trim it for the view
-    @dead_jobs.sort! { |a, b| [b[:tlast], b[:id]] <=> [a[:tlast], a[:id]] }
+    @dead_jobs.sort! { |a, b| b[:tlast] <=> a[:tlast] }
     @dead_jobs_view = @dead_jobs[0, dead_count]
+
+    # Find the "since" time for the list of dead jobs
+    if @dead_jobs_view.length > 0 then
+      earliestJob = (@dead_jobs_view.sort { |a, b| a[:tfirst] <=> b[:tfirst] })[0]
+      @dead_job_since = "(since " + earliestJob[:submissionTime] + ")"
+    end
   end
 
   #
@@ -236,8 +243,13 @@ protected
       else
         t2 = DateTime.parse(job[:last]).to_time
       end
+      job[:tfirst] = t1.to_i
       job[:elapsed] = t2.to_i - t1.to_i # elapsed seconds
       job[:tlast] = t2.to_i             # epoch time when the job completed
+
+      # Make printable time strings
+      job[:submissionTime] = Time.at(job[:tfirst]).in_time_zone.strftime("%a %m-%d %H:%M:%S")
+      job[:completionTime] = Time.at(job[:tlast]).in_time_zone.strftime("%a %m-%d %H:%M:%S")
 
       # Get status and overall summary of the job's state
       job[:status] = rjob["trace"][-1].split("|")[1]
