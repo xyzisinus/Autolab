@@ -270,6 +270,17 @@ protected
 
       # Get status and overall summary of the job's state
       job[:status] = rjob["trace"][-1].split("|")[1]
+
+      # Remove the "for job jobName:jobId" string from status string for cleaner
+      # representation.
+      # Note: The filter string strongly depends on the trace sent from Tango.
+      # When Tango trace changes, this may break but it's fail-safe, i.e.
+      # the link for "status" on the jobs page may look verbose but it should not
+      # lose information.
+      filterStr = "for job " + job[:name] + ":" + job[:id].to_s
+      if job[:status].scan(/#{Regexp.escape(filterStr)}/).count == 1 then
+        job[:status].gsub!(filterStr, '')
+      end
     end
 
     job[:vmPool] = rjob["vm"]["name"]
