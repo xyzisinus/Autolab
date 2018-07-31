@@ -11,7 +11,7 @@
 <li>Job ID: <%= @job[:id] %>
 <li>State: <%= @job[:state] %>
 <li>Status: <%= @job[:status] %>
-<li>Elapsed time: <%= @job[:elapsed] %> secs
+<li>Elapsed time: <%= @job[:elapsed] %>
 <li>VM instance: <%= @job[:rjob]["vm"]["id"] %>
 </ul>
 
@@ -39,11 +39,10 @@
 <li>Output File: <%= @job[:rjob]["outputFile"].sub(/\/afs\/cs.cmu.edu\/academic\/autolab\/autolab2/, "[autolab]") %>
 </ul>
 
-<h2>Runtime Trace</h2>
+<h2>Runtime Trace (timezone <%= @tango_info["timezone_name"] %>)</h2>
 <ul>
   <% for item in @job[:rjob]["trace"] do %>
-    <% poo = item.split("|") %>
-    <li><span class="moment-date-time"><%= DateTime.parse(poo[0]).to_time.in_time_zone.to_s %></span> | <%= poo[1] %></li>
+    <li><%= item %></li>
   <% end %>
 </ul>
 

@@ -27,7 +27,7 @@
       <th>Job Name</th>
       <th>VM Pool:Name</th>
       <th>Submitted At</th>
-      <th>Elapsed (s)</th>
+      <th>Elapsed</th>
     </tr>
   <% for @job in @running_jobs do %>
     <tr>
@@ -51,7 +51,7 @@
       <th>Job Name</th>
       <th>VM Pool</th>
       <th>Submitted At</th>
-      <th>Elapsed (s)</th>
+      <th>Elapsed</th>
     </tr>
   <% for @job in @waiting_jobs do %>
     <tr>
@@ -72,6 +72,7 @@
   <li>Job Runtime Errors: <%= @tango_info["runjob_errors"] %></li>
   <li>Job Copyout Errors: <%= @tango_info["copyout_errors"] %></li>
   <li>Tango Threads: <%= @tango_info["num_threads"] %></li>
+  <li>Tango Timezone: <%= @tango_info["timezone_name"] %></li>
 </ul>
 <h3>VM Pools</h3>
 <table class="navigatable prettyBorder sortable">
@@ -144,7 +145,7 @@
     <li><b>Event Timestamp:</b> <span id="job_time">Not selected</span>
     <li><b>VM ID:</b> <span id="vm_id">Not selected</span>
     <li><b>VM Pool:</b> <span id="vm_pool">Not selected</span>
-    <li><b>Elapsed Seconds:</b> <span id="job_duration">Not selected</span>
+    <li><b>Elapsed seconds:</b> <span id="job_duration">Not selected</span>
     <li><b>Status:</b> <span id="job_status">Not selected</span>
   </ul>
 </div>

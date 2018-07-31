@@ -3,7 +3,7 @@
 <% end %>
 
 <p>
-This page shows you the status of current and recent autograding jobs.<br />
+This page shows you the status of current and recent autograding jobs, displayed in timezone <%= @tango_info["timezone_name"] %>.<br />
 <%= link_to "Click here", tango_status_course_jobs_path %> to view the overall status of Tango VMs.
 </p>
 
@@ -14,7 +14,7 @@ This page shows you the status of current and recent autograding jobs.<br />
 <% end %>
   <table class='prettyBorder sortable'>
   <tr><th>Job ID</th><th>Job Name</th><th>Submitted At</th>
-  <th>Elapsed (s)</th><th>Status</th></tr>
+  <th>Elapsed</th><th>Status</th></tr>
   <% for @job in @running_jobs do %>
     <tr>
     <td> <%= @job[:id] %> </td> 
@@ -41,7 +41,7 @@ This page shows you the status of current and recent autograding jobs.<br />
   <p><%= @waiting_jobs.length %> jobs (most recent submission first)</p>
 <% end %>
   <table class='prettyBorder sortable'>
-  <tr><th>Job ID</th><th>Job Name</th><th>Submitted At</th><th>Elapsed (s)</th><th>Status</th></tr>
+  <tr><th>Job ID</th><th>Job Name</th><th>Submitted At</th><th>Elapsed</th><th>Status</th></tr>
   <% for @job in @waiting_jobs do %>
     <tr>
     <td> <%= @job[:id] %> </td> 
@@ -63,11 +63,11 @@ This page shows you the status of current and recent autograding jobs.<br />
   </table>
 
 <% if @cud.user.administrator? then %>
-  <h3>Recently Completed Jobs <%= @dead_job_since %></h3>
+  <h3>Recently Completed Jobs <%= @dead_jobs_since %></h3>
 <% elsif @cud.instructor? then %>
-  <h3>Recently Completed Jobs For This Course <%= @dead_job_since %></h3>
+  <h3>Recently Completed Jobs For This Course <%= @dead_jobs_since %></h3>
 <% else %>
-  <h3>Your Recently Completed Jobs <%= @dead_job_since %></h3>
+  <h3>Your Recently Completed Jobs <%= @dead_jobs_since %></h3>
 <% end %>
 
 <% if @dead_jobs_view.length > 0 then %>
@@ -75,7 +75,7 @@ This page shows you the status of current and recent autograding jobs.<br />
 <% end %>
   <table class='prettyBorder sortable'>
   <tr><th>Job ID</th><th>Job Name</th><th>Submitted At</th>
-  <th>Completed At</th><th>Elapsed (s)</th><th>Status</th></tr>
+  <th>Completed At</th><th>Elapsed</th><th>Status</th></tr>
   <% for @job in @dead_jobs_view do %>
     <tr <% if @job[:state] == "Failed" then %> style="background-color:#ce4844; color:#fff"<% end %>>    <td> <%= @job[:id] %> </td>
     <td> <%= @job[:name] %> </td> 

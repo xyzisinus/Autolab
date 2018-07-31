@@ -15,6 +15,8 @@ class JobsController < ApplicationController
   end
   action_auth_level :index, :student
   def index
+    @tango_info = TangoClient.info
+
     # Instance variables that will be used by the view
     @running_jobs = []   # running jobs
     @waiting_jobs = []   # jobs waiting in job queue
@@ -66,7 +68,7 @@ class JobsController < ApplicationController
     # Find the "since" time for the list of dead jobs
     if @dead_jobs_view.length > 0 then
       earliestJob = (@dead_jobs_view.sort { |a, b| a[:tfirst] <=> b[:tfirst] })[0]
-      @dead_job_since = "(since " + earliestJob[:submissionTime] + ")"
+      @dead_jobs_since = "(since " + earliestJob[:submissionTime] + ")"
     end
   end
 
@@ -75,6 +77,8 @@ class JobsController < ApplicationController
   #
   action_auth_level :getjob, :student
   def getjob
+    @tango_info = TangoClient.info
+
     # Make sure we have a job id parameter
     if !params[:id]
       flash[:error] = "Error: missing job ID parameter in URL"
@@ -253,20 +257,20 @@ protected
 
       # Compute elapsed time. Live jobs show time from submission
       # until now.  Dead jobs show end-to-end elapsed time.
-      t1 = DateTime.parse(job[:first]).to_time
+      t1 = DateTime.parse(job[:first]).to_time.to_i
       if is_live
-        snow = Time.now.in_time_zone.to_s
-        t2 = DateTime.parse(snow).to_time
+        # now in Tango's timezone
+        t2 = Time.now.in_time_zone.to_i - @tango_info["timezone_offset"]
       else
-        t2 = DateTime.parse(job[:last]).to_time
+        t2 = DateTime.parse(job[:last]).to_time.to_i  # completion time
       end
       job[:tfirst] = t1.to_i
-      job[:elapsed] = t2.to_i - t1.to_i # elapsed seconds
-      job[:tlast] = t2.to_i             # epoch time when the job completed
+      job[:tlast] = t2.to_i
+      job[:elapsed] = Time.at(t2.to_i - t1.to_i).strftime("%H:%M:%S")
 
       # Make printable time strings
-      job[:submissionTime] = Time.at(job[:tfirst]).in_time_zone.strftime("%a %m-%d %H:%M:%S")
-      job[:completionTime] = Time.at(job[:tlast]).in_time_zone.strftime("%a %m-%d %H:%M:%S")
+      job[:submissionTime] = Time.at(job[:tfirst]).strftime("%a %m-%d %H:%M:%S")
+      job[:completionTime] = Time.at(job[:tlast]).strftime("%a %m-%d %H:%M:%S")
 
       # Get status and overall summary of the job's state
       job[:status] = rjob["trace"][-1].split("|")[1]
