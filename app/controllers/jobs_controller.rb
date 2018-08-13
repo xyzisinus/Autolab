@@ -264,16 +264,31 @@ protected
       else
         t2 = DateTime.parse(job[:last]).to_time.to_i  # completion time
       end
-      job[:tfirst] = t1.to_i
-      job[:tlast] = t2.to_i
-      job[:elapsed] = Time.at(t2.to_i - t1.to_i).strftime("%H:%M:%S")
+      job[:tfirst] = t1
+      job[:tlast] = t2
+      job[:elapsed] = Time.at(t2 - t1).strftime("%H:%M:%S")
 
       # Make printable time strings
-      job[:submissionTime] = Time.at(job[:tfirst]).strftime("%a %m-%d %H:%M:%S")
-      job[:completionTime] = Time.at(job[:tlast]).strftime("%a %m-%d %H:%M:%S")
+      job[:submissionTime] = Time.at(t1).strftime("%a %m-%d %H:%M:%S")
+      job[:completionTime] = Time.at(t2).strftime("%a %m-%d %H:%M:%S")
 
       # Get status and overall summary of the job's state
       job[:status] = rjob["trace"][-1].split("|")[1]
+
+      # Get assigned job's start time
+      job[:startAt] = ""  # in case the "Dispatch job" trace line is missing
+      if rjob["assigned"]
+        for trace in rjob["trace"]
+          msg = trace.split("|")[1]
+          if msg.include?("Dispatched job")
+            start = DateTime.parse(trace.split("|")[0]).to_time.to_i
+            job[:startAt] = Time.at(start).strftime("%a %m-%d %H:%M:%S")
+            if !is_live  # completed
+              job[:duration] = Time.at(t2 - start).strftime("%H:%M:%S")
+            end
+          end
+        end
+      end
 
       # Remove the "for job jobName:jobId" string from status string for cleaner
       # representation.
