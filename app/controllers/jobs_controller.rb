@@ -302,7 +302,7 @@ protected
       end
     end
 
-    job[:vmPool] = rjob["vm"]["name"]
+    job[:vmPool] = rjob["vm"]["pool"]
     if is_live
       if job[:status]["Added job"]
         job[:state] = "Waiting"
@@ -331,7 +331,7 @@ protected
       next if j["trace"].nil? || j["trace"].length == 0
       tstamp = j["trace"][0].split("|")[0]
       name = j["name"]
-      pool = j["vm"]["name"]
+      pool = j["vm"]["pool"]
       vmid = j["vm"]["id"]
       jid = j["id"]
       status = j["assigned"] ? "Running (assigned)" : "Waiting to be assigned"
@@ -363,7 +363,7 @@ protected
       tstamp = j["trace"][0].split("|")[0]
       name = j["name"]
       jid = j["id"]
-      pool = j["vm"]["name"]
+      pool = j["vm"]["pool"]
       vmid = j["vm"]["id"]
       trace = j["trace"].join
       duration = Time.parse(j["trace"].last.split("|")[0]).to_i - Time.parse(j["trace"].first.split("|")[0]).to_i
