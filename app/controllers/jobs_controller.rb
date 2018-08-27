@@ -250,27 +250,35 @@ protected
       end
     end
 
-    # Extract timestamps of first and last trace records
+    # Extract timestamps of first and last trace records to compute time for jobs page.
+    # Timezone handling: We try to present time in the time zone consistent with
+    # the trace provided by Tango.  That is, whatever timestamps in trace, they are
+    # presented in the browser.  To do that, we simply pretend Tango's timestamps
+    # are UTC.  The problem with that is the elapsed time for "live" jobs
+    # because the "now" time is obtained here.  For that reason Tango returns a
+    # timezone_offset from UTC in seconds and we adjust the pretended UTC time by the
+    # timezone_offset.
+
     if rjob["trace"]
       job[:first] = rjob["trace"][0].split("|")[0]
       job[:last] = rjob["trace"][-1].split("|")[0]
 
       # Compute elapsed time. Live jobs show time from submission
       # until now.  Dead jobs show end-to-end elapsed time.
-      t1 = DateTime.parse(job[:first]).to_time.to_i
+      t1 = DateTime.parse(job[:first]).to_time.utc.to_i
       if is_live
         # now in Tango's timezone
-        t2 = Time.now.in_time_zone.to_i - @tango_info["timezone_offset"]
+        t2 = Time.now.utc.to_i - @tango_info["timezone_offset"]
       else
-        t2 = DateTime.parse(job[:last]).to_time.to_i  # completion time
+        t2 = DateTime.parse(job[:last]).to_time.utc.to_i  # completion time
       end
       job[:tfirst] = t1
       job[:tlast] = t2
-      job[:elapsed] = Time.at(t2 - t1).strftime("%H:%M:%S")
+      job[:elapsed] = Time.at(t2 - t1).utc.strftime("%H:%M:%S")
 
       # Make printable time strings
-      job[:submissionTime] = Time.at(t1).strftime("%a %m-%d %H:%M:%S")
-      job[:completionTime] = Time.at(t2).strftime("%a %m-%d %H:%M:%S")
+      job[:submissionTime] = Time.at(t1).utc.strftime("%a %m-%d %H:%M:%S")
+      job[:completionTime] = Time.at(t2).utc.strftime("%a %m-%d %H:%M:%S")
 
       # Get status and overall summary of the job's state
       job[:status] = rjob["trace"][-1].split("|")[1]
@@ -281,10 +289,10 @@ protected
         for trace in rjob["trace"]
           msg = trace.split("|")[1]
           if msg.include?("Dispatched job")
-            start = DateTime.parse(trace.split("|")[0]).to_time.to_i
-            job[:startAt] = Time.at(start).strftime("%a %m-%d %H:%M:%S")
+            start = DateTime.parse(trace.split("|")[0]).to_time.utc.to_i
+            job[:startAt] = Time.at(start).utc.strftime("%a %m-%d %H:%M:%S")
             if !is_live  # completed
-              job[:duration] = Time.at(t2 - start).strftime("%H:%M:%S")
+              job[:duration] = Time.at(t2 - start).utc.strftime("%H:%M:%S")
             end
           end
         end
@@ -336,7 +344,8 @@ protected
       jid = j["id"]
       status = j["assigned"] ? "Running (assigned)" : "Waiting to be assigned"
       trace = j["trace"].join
-      duration = Time.parse(j["trace"].last.split("|")[0]).to_i - Time.parse(j["trace"].first.split("|")[0]).to_i
+      duration = Time.parse(j["trace"].last.split("|")[0]).utc.to_i -
+                 Time.parse(j["trace"].first.split("|")[0]).utc.to_i
       if j["retries"] > 0 || trace.include?("fail") || trace.include?("error")
         status = "Running (error occured)"
         j["trace"].each do |tr|
@@ -366,7 +375,8 @@ protected
       pool = j["vm"]["pool"]
       vmid = j["vm"]["id"]
       trace = j["trace"].join
-      duration = Time.parse(j["trace"].last.split("|")[0]).to_i - Time.parse(j["trace"].first.split("|")[0]).to_i
+      duration = Time.parse(j["trace"].last.split("|")[0]).utc.to_i -
+                 Time.parse(j["trace"].first.split("|")[0]).utc.to_i
       warnings = false
       if j["retries"] > 0 || trace.include?("fail") || trace.include?("error")
         j["trace"].each do |tr|
