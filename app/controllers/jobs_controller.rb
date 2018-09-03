@@ -159,6 +159,28 @@ class JobsController < ApplicationController
       end
     end
 
+    if @feedback_str == nil || @feedback_str == ""
+      if is_live
+        @feedback_str = "Jos is not complete. No feedback yet."
+      else
+        # get output file from Tango for completed job.
+        # If for some reason (or if the job is sent with run_jobs), Autolab doesn't
+        # receive the callback when the job is done and therefore has no record
+        # of the job in the submission database table.  But since this job is
+        # still retrievable frome Tango, we can ask Tango for the output.
+        # "outputFile" is like courselabs/<tango-key>-<courseLabDir>/output/<outputFile>
+
+        parts = rjob["outputFile"].split("/")
+        courseLab = parts[1]
+        courseLab.slice! (RESTFUL_KEY + "-")  # remove the tango-key part
+        outputFile = parts[3]
+        response = TangoClient.poll(courseLab, URI.encode(outputFile) + "/")
+        unless response.content_type == "application/json"
+          @feedback_str = response.body.force_encoding("UTF-8")
+        end
+      end
+    end
+
     # Students see only the output report from the autograder. So
     # bypass the view and redirect them to the viewFeedback page
     return unless !@cud.instructor? && !@cud.user.administrator?
