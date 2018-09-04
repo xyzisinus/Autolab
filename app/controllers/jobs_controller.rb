@@ -1,3 +1,4 @@
+# coding: utf-8
 require "cgi"
 require "uri"
 require "tango_client"
@@ -176,7 +177,8 @@ class JobsController < ApplicationController
         outputFile = parts[3]
         response = TangoClient.poll(courseLab, URI.encode(outputFile) + "/")
         unless response.content_type == "application/json"
-          @feedback_str = response.body.force_encoding("UTF-8")
+          tmp_str = "Feedback from Tango server:\n\n" + response.body
+          @feedback_str = tmp_str.force_encoding("UTF-8")
         end
       end
     end
