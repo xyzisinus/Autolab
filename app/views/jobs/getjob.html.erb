@@ -12,12 +12,12 @@
 <li>State: <%= @job[:state] %>
 <li>Status: <%= @job[:status] %>
 <li>Elapsed time: <%= @job[:elapsed] %>
-<li>VM instance: <%= @job[:rjob]["vm"]["id"] %>
+<li>VM instance: <%= @job[:rjob]["vm"]["name"] %>
 </ul>
 
 <h2>Job Parameters</h2>
 <ul>
-<li>VM image: <%= @job[:rjob]["vm"]["name"]%>
+<li>VM image: <%= @job[:rjob]["vm"]["pool"]%>
 <li>Job Timeout: <%= @job[:rjob]["timeout"] %> secs
 <li>Maximum Output File Size: <%= @job[:rjob]["maxOutputFileSize"] %> bytes
 <li>Input Files: 
