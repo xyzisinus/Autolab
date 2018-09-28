@@ -153,7 +153,7 @@ class JobsController < ApplicationController
       @feedback_str = ""
       scores.each do |score|
         i += 1
-        next unless score.feedback && score.feedback["Autograder"]
+        next unless score.feedback
         @feedback_str = score.feedback
         feedback_num = i
         break

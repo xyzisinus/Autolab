@@ -270,6 +270,11 @@ module AssessmentAutograde
       hostname = "https://" + hostname.strip
     end
 
+    begin
+      hostname += ":" + request.port.to_s  # add port number if any
+    rescue
+    end
+
     callback_url = (RESTFUL_USE_POLLING) ? "" :
       "#{hostname}/courses/#{course.name}/assessments/#{assessment.name}/autograde_done?dave=#{dave}&submission_id=#{submission.id}"
     COURSE_LOGGER.log("Callback: #{callback_url}")
@@ -494,10 +499,10 @@ module AssessmentAutograde
         end
       end
     rescue StandardError => e
-      feedback_str = "An error occurred while parsing the autoresult returned by the Autograder.\n
-        \nError message: #{e}\n\n"
-      feedback_str += lines.join if lines && (lines.length < 10_000)
-			@assessment.problems.each do |p|
+      feedback_str = "WARNING: Scores (should be on the last line) are missing from output returned by Autograder.\n\n"
+      feedback_str += shortenedOutput(lines).join
+
+      @assessment.problems.each do |p|
         submissions.each do |submission|
           score = submission.scores.find_or_initialize_by(problem_id: p.id)
           next unless score.new_record? # don't overwrite scores
@@ -526,6 +531,21 @@ module AssessmentAutograde
     fail "Empty autoresult" unless parsed
     fail "Missing 'scores' object in the autoresult" unless parsed["scores"]
     parsed["scores"]
+  end
+
+  def shortenedOutput(lines)
+    lengthLimit = 10000  # cap the lines of output
+    halfLimit = (lengthLimit / 2).to_i
+    if lines.length == 0
+      return ["WARNING: Autograder output empty\n"]
+    elsif lines.length <= lengthLimit
+      return lines
+    end
+
+    warning1 = ["WARNING: Output > " + lengthLimit.to_s + " lines.  Elided in the middle.\n\n"]
+    warning2 = ["\nWARNING: Output elided here to fit the limit of " + lengthLimit.to_s + " lines.\n\n"]
+    return warning1.concat(lines[0, halfLimit]).concat(warning2).
+            concat(lines[lines.length - halfLimit, halfLimit])
   end
 
   def extend_config_module(assessment, submission, cud)
