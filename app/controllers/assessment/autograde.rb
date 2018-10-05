@@ -499,7 +499,7 @@ module AssessmentAutograde
         end
       end
     rescue StandardError => e
-      feedback_str = "WARNING: Scores (should be on the last line) are missing from output returned by Autograder.\n\n"
+      feedback_str = "WARNING: Scores (should be on the last line) are missing or ill-formed in Autograder feedback.\n\n"
       feedback_str += shortenedOutput(lines).join
 
       @assessment.problems.each do |p|
