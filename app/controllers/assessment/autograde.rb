@@ -275,6 +275,22 @@ module AssessmentAutograde
     rescue
     end
 
+    # Note: callback_url is a way for Tango (the grading backend) to
+    # inform the web app (Autolab) the status of a job, typically when
+    # it's done.  The control flow goes like
+    #
+    # 1. Autolab: When sending a job (in sendjob()), a url generated
+    # below is sent as a parameter of the job.  It contains the REST address
+    # of Autolab (the current web app) and a unique string referred as the
+    # "dave" key in Autolab.
+    #
+    # 2. Tango: It keeps the callback_url, if any, with the job, and runs
+    # the job.  When the job is done, it calls Autolab using the callback_url.
+    #
+    # 3. Autolab: Upon receiving the call (in autograde_done()), it
+    # uses the dave key to find the job submission already stored in the
+    # database.
+
     callback_url = (RESTFUL_USE_POLLING) ? "" :
       "#{hostname}/courses/#{course.name}/assessments/#{assessment.name}/autograde_done?dave=#{dave}&submission_id=#{submission.id}"
     COURSE_LOGGER.log("Callback: #{callback_url}")
