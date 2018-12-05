@@ -497,8 +497,19 @@ class AssessmentsController < ApplicationController
 
     redirect_to(action: "index") && return unless @score
 
+    # note: the following code is probably moot. The reuslt in @file
+    # is not used by the only caller in downloadSumission.html.erb.
+    # But when unpacking fails without exception handling,
+    # it prevents the feedback from being shown in the above template.
+    # Without understanding the intention of the original coder,
+    # I simply catch the exception. -- czang@cmu.edu
+
     if Archive.archive? @submission.handin_file_path
-      @files = Archive.get_files @submission.handin_file_path
+      begin
+        @files = Archive.get_files @submission.handin_file_path
+      rescue
+        @files = []
+      end
     end
   end
 

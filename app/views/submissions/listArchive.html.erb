@@ -3,6 +3,10 @@
   <%= @assessment.display_name %> (<%= @submission.course_user_datum.email %>)
 </h3>
 
+<% unless @files.any? then %>
+  <p style="color:red;"><big><strong>Error: Input file unpacking failed.</strong></big></p>
+<% else %>
+
 Files in this Archive: <br/>
 <ul>
   <% @files.each do |file| %>
@@ -23,3 +27,4 @@ Files in this Archive: <br/>
     <% end %>
   <% end %>
 </ul>
+<% end %>

@@ -389,6 +389,8 @@ class SubmissionsController < ApplicationController
   action_auth_level :listArchive, :student
   def listArchive
     @files = Archive.get_files(@filename).sort! { |a, b| a[:pathname] <=> b[:pathname] }
+  rescue
+    @files = []
   end
 
 private
