@@ -49,6 +49,10 @@ module AssessmentHelper
       # title row with the column names:
       title = ["Email:"]
       asmt.problems.each { |problem| title << "#{problem.name}:" }
+      title << "Late Penalty:"
+      if asmt.version_penalty? && asmt.version_penalty != 0
+        title << "Version Penalty:"
+      end
       title << "Total:"
       csv << title
 
@@ -74,6 +78,7 @@ private
 
     grade_type = aud.grade_type
     submission_status = aud.submission_status
+    submission = aud.latest_submission
 
     # generate score cells of the row
     score_cells = if grade_type == AssessmentUserDatum::NORMAL &&
@@ -92,6 +97,19 @@ private
 
     # add scores to csv row (for scores columns)
     row.concat score_cells
+
+    # add late and version penalties, if any
+    late_penalty = 0
+    version_penalty = 0
+    if submission != nil
+      late_penalty = submission.late_penalty(as_seen_by).round(1)
+      version_penalty = submission.version_penalty(as_seen_by).round(1)
+    end
+
+    row << late_penalty
+    if asmt.version_penalty? && asmt.version_penalty != 0
+      row << version_penalty
+    end
 
     # add AUD status (see AUD.status method) as final column
     final = aud.status as_seen_by
