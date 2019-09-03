@@ -175,9 +175,14 @@ class JobsController < ApplicationController
         courseLab = parts[1]
         courseLab.slice! (RESTFUL_KEY + "-")  # remove the tango-key part
         outputFile = parts[3]
-        response = TangoClient.poll(courseLab, URI.encode(outputFile) + "/")
-        unless response.content_type == "application/json"
-          tmp_str = "Feedback from Tango server:\n\n" + response.body
+        begin
+          response = TangoClient.poll(courseLab, URI.encode(outputFile) + "/")
+          unless response.content_type == "application/json"
+            tmp_str = "Feedback from Tango server:\n\n" + response.body
+            @feedback_str = tmp_str.force_encoding("UTF-8")
+          end
+        rescue => e
+          tmp_str = "Fail to get feedback from Tango server: #{e.message}"
           @feedback_str = tmp_str.force_encoding("UTF-8")
         end
       end
